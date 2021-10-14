@@ -3,9 +3,10 @@
   <component name="DesignSurface">
     <option name="filePathToZoomLevelMap">
       <map>
+        <entry key="..\:/Users/Lawencon/Dev/CameraXRealtimeFaceRecognition/app/src/main/res/drawable/gradient.xml" value="0.17222222222222222" />
         <entry key="..\:/Users/Lawencon/Dev/CameraXRealtimeFaceRecognition/app/src/main/res/drawable/ic_take_face.xml" value="0.18102564102564103" />
         <entry key="..\:/Users/Lawencon/Dev/CameraXRealtimeFaceRecognition/app/src/main/res/layout/activity_main.xml" value="0.15364583333333334" />
-        <entry key="..\:/Users/Lawencon/Dev/CameraXRealtimeFaceRecognition/app/src/main/res/layout/activity_recognition.xml" value="0.16770833333333332" />
+        <entry key="..\:/Users/Lawencon/Dev/CameraXRealtimeFaceRecognition/app/src/main/res/layout/activity_recognition.xml" value="0.13333333333333333" />
         <entry key="..\:/Users/Lawencon/Dev/CameraXRealtimeFaceRecognition/app/src/main/res/layout/activity_registration.xml" value="0.22" />
       </map>
     </option>

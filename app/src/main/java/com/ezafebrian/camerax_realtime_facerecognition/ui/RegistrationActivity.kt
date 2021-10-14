@@ -45,7 +45,6 @@ class RegistrationActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         hideStatusBarAndNavigation()
-
         setContentView(R.layout.activity_registration)
 
         progressBar = findViewById(R.id.progress_bar)

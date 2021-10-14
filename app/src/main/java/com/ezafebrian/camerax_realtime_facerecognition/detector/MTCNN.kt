@@ -3,6 +3,7 @@ package com.ezafebrian.camerax_realtime_facerecognition.detector
 import android.content.res.AssetManager
 import android.graphics.Bitmap
 import android.graphics.Point
+import android.util.Log
 import com.ezafebrian.camerax_realtime_facerecognition.util.*
 import com.ezafebrian.camerax_realtime_facerecognition.util.Constant.MODEL_FILE_ONET
 import com.ezafebrian.camerax_realtime_facerecognition.util.Constant.MODEL_FILE_PNET
@@ -33,7 +34,7 @@ class MTCNN(assetManager: AssetManager) {
     private val oNetThreshold = 0.7f
 
     fun detectFaces(bitmap: Bitmap, minFaceSize: Int): Vector<Box> {
-        var boxes = Vector<Box>()
+        var boxes: Vector<Box>
         try {
             // pNet
             boxes = pNet(bitmap, minFaceSize)
@@ -131,8 +132,6 @@ class MTCNN(assetManager: AssetManager) {
     }
 
     private fun rNet(bitmap: Bitmap, boxes: Vector<Box>): Vector<Box> {
-
-        // RNet Input Init
         val num = boxes.size
         val rNetIn = Array(num) { Array(24) { Array(24) { FloatArray(3) } } }
         for (i in 0 until num) {
@@ -140,6 +139,7 @@ class MTCNN(assetManager: AssetManager) {
             curCrop = transposeImage(curCrop)
             rNetIn[i] = curCrop
         }
+        Log.d("TAG", rNetIn.contentDeepToString())
         rNetForward(rNetIn, boxes)
 
         // RNetThreshold
@@ -163,7 +163,6 @@ class MTCNN(assetManager: AssetManager) {
         outputs[rInterpreter.getOutputIndex("rnet/conv5-2/conv5-2")] = conv5_2_conv5_2
         rInterpreter.runForMultipleInputsOutputs(arrayOf<Any>(rNetIn), outputs)
 
-        // 转换
         for (i in 0 until num) {
             boxes[i].score = prob1[i][1]
             for (j in 0..3) {
@@ -173,7 +172,7 @@ class MTCNN(assetManager: AssetManager) {
     }
 
     private fun square_limit(boxes: Vector<Box>, w: Int, h: Int) {
-        for (i in boxes.indices) {
+         for (i in boxes.indices) {
             boxes[i].toSquareShape()
             boxes[i].limitSquare(w, h)
         }
@@ -256,10 +255,11 @@ class MTCNN(assetManager: AssetManager) {
         conv4_2_BiasAdd: Array<Array<Array<FloatArray>>>
     ) {
         val img = normalizeImage(bitmap)
-        val pNetIn: Array<Array<Array<FloatArray>>?> = arrayOfNulls(1)
+        var pNetIn: Array<Array<Array<FloatArray>>> = Array(1) { arrayOf() }
         pNetIn[0] = img
-        val outputs: MutableMap<Int, Any> = HashMap()
+        pNetIn = transposeBatch(pNetIn)
 
+        val outputs: MutableMap<Int, Any> = HashMap()
         outputs[pInterpreter.getOutputIndex("pnet/prob1")] = prob1
         outputs[pInterpreter.getOutputIndex("pnet/conv4-2/BiasAdd")] = conv4_2_BiasAdd
 

@@ -6,8 +6,8 @@ import android.graphics.Point
 import kotlin.math.abs
 import kotlin.math.atan
 
-class Align {
-    fun faceAlign(bitmap:Bitmap, landmarks:Array<Point?>): Bitmap? {
+object Align {
+    fun faceAlign(bitmap: Bitmap, landmarks: Array<Point?>): Bitmap? {
         val diffEyeX = (landmarks[1]!!.x - landmarks[0]!!.x).toFloat()
         val diffEyeY = (landmarks[1]!!.y - landmarks[0]!!.y).toFloat()
 

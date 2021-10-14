@@ -2,16 +2,18 @@ package com.ezafebrian.camerax_realtime_facerecognition.util
 
 import android.app.Activity
 import android.content.res.AssetManager
-import android.graphics.Bitmap
-import android.graphics.Matrix
-import android.graphics.Rect
+import android.graphics.*
+import android.media.Image
+import android.media.Image.Plane
 import com.ezafebrian.camerax_realtime_facerecognition.R
 import com.ezafebrian.camerax_realtime_facerecognition.detector.Box
+import java.io.ByteArrayOutputStream
 import java.io.File
 import java.io.FileInputStream
 import java.io.IOException
 import java.nio.MappedByteBuffer
 import java.nio.channels.FileChannel
+import kotlin.math.max
 import kotlin.math.pow
 import kotlin.math.sqrt
 
@@ -126,9 +128,38 @@ fun l2Normalize(embeddings: Array<FloatArray>, epsilon: Double) {
             squareSum += element.toDouble().pow(2.0).toFloat()
         }
         val xInvNorm =
-            sqrt(squareSum.toDouble().coerceAtLeast(epsilon)).toFloat()
+            sqrt(max(squareSum.toDouble(), epsilon)).toFloat()
         for (j in embeddings[i].indices) {
             embeddings[i][j] = embeddings[i][j] / xInvNorm
         }
     }
+}
+
+fun toBitmap(image: Image): Bitmap {
+    val planes = image.planes
+    val yBuffer = planes[0].buffer
+    val uBuffer = planes[1].buffer
+    val vBuffer = planes[2].buffer
+
+    val ySize = yBuffer.remaining()
+    val uSize = uBuffer.remaining()
+    val vSize = vBuffer.remaining()
+
+    val nv21 = ByteArray(ySize + uSize + vSize)
+    yBuffer[nv21, 0, ySize]
+    vBuffer[nv21, ySize, vSize]
+    uBuffer[nv21, ySize + vSize, uSize]
+
+    val yuvImage = YuvImage(nv21, ImageFormat.NV21, image.width, image.height, null)
+    val out = ByteArrayOutputStream()
+    yuvImage.compressToJpeg(Rect(0, 0, yuvImage.width, yuvImage.height), 75, out)
+
+    val imageBytes = out.toByteArray()
+    return BitmapFactory.decodeByteArray(imageBytes, 0, imageBytes.size)
+}
+
+fun rotateBitmap(source: Bitmap, angle: Float): Bitmap {
+    val matrix = Matrix()
+    matrix.postRotate(angle)
+    return Bitmap.createBitmap(source, 0, 0, source.width, source.height, matrix, true)
 }

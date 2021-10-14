@@ -104,7 +104,7 @@ object Utils {
         rect.bottom = min(bitmap.height - 1, rect.bottom + pixels)
     }
 
-    fun showPixel(v:Int) {
+    fun showPixel(v: Int) {
         Log.i(
             "MainActivity",
             "[*]Pixel:R" + (v shr 16 and 0xff) + "G:" + (v shr 8 and 0xff) + " B:" + (v and 0xff)

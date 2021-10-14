@@ -8,4 +8,7 @@ object Constant {
 
     const val PHOTO_WIDTH = 720
     const val PHOTO_HEIGHT = 1280
+
+    const val INPUT_IMAGE_SIZE = 112
+    const val THRESHOLD = 0.8f
 }
