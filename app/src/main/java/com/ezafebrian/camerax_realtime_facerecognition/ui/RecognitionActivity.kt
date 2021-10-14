@@ -20,13 +20,10 @@ import com.ezafebrian.camerax_realtime_facerecognition.R
 import com.ezafebrian.camerax_realtime_facerecognition.detector.Align
 import com.ezafebrian.camerax_realtime_facerecognition.detector.MTCNN
 import com.ezafebrian.camerax_realtime_facerecognition.recognition.MobileFaceNet
+import com.ezafebrian.camerax_realtime_facerecognition.util.*
 import com.ezafebrian.camerax_realtime_facerecognition.util.Constant.PHOTO_HEIGHT
 import com.ezafebrian.camerax_realtime_facerecognition.util.Constant.PHOTO_WIDTH
 import com.ezafebrian.camerax_realtime_facerecognition.util.Constant.THRESHOLD
-import com.ezafebrian.camerax_realtime_facerecognition.util.crop
-import com.ezafebrian.camerax_realtime_facerecognition.util.getOutputDirectory
-import com.ezafebrian.camerax_realtime_facerecognition.util.rotateBitmap
-import com.ezafebrian.camerax_realtime_facerecognition.util.toBitmap
 import java.io.File
 import java.lang.IllegalStateException
 import java.lang.NullPointerException
@@ -117,17 +114,17 @@ class RecognitionActivity : AppCompatActivity() {
         val rotatedBitmap = rotateBitmap(bitmap, -90f)
 
         try {
-            val realtimeFace: Bitmap = cropImage(rotatedBitmap)
+            val realtimeFace: Bitmap = cropImage(rotatedBitmap, mtcnn)
             try {
                 val conf = mobileFaceNet.compare(registeredFace!!, realtimeFace)
 
                 runOnUiThread {
                     if (conf > THRESHOLD) {
                         textInfo.setTextColor(Color.GREEN)
-                        textInfo.text = "Same person: True"
+                        textInfo.text = "Same person: True, conf: $conf"
                     } else {
                         textInfo.setTextColor(Color.RED)
-                        textInfo.text = "Same person: False"
+                        textInfo.text = "Same person: False, conf: $conf"
                     }
                 }
             } catch (e: IllegalStateException) {
@@ -144,19 +141,6 @@ class RecognitionActivity : AppCompatActivity() {
 
     private fun err(e: Throwable) {
         Log.e(TAG, e.stackTraceToString())
-    }
-
-    private fun cropImage(uncroppedBitmap: Bitmap): Bitmap {
-        var bitmapTemp = uncroppedBitmap.copy(uncroppedBitmap.config, false)
-        var boxes = mtcnn.detectFaces(bitmapTemp, bitmapTemp.width / 5)
-        var box = boxes[0]
-        bitmapTemp = Align.faceAlign(bitmapTemp, box.landmark)
-        boxes = mtcnn.detectFaces(bitmapTemp, bitmapTemp.width / 5)
-        box = boxes[0]
-        box.toSquareShape()
-        box.limitSquare(bitmapTemp.width, bitmapTemp.height)
-        val rect = box.transform2Rect()
-        return crop(bitmapTemp, rect)
     }
 
     private fun hideStatusBarAndNavigation() {
@@ -176,7 +160,7 @@ class RecognitionActivity : AppCompatActivity() {
         val file = File(getOutputDirectory(this), "photos.jpg")
         var bitmap = BitmapFactory.decodeFile(file.path)
         bitmap = rotateBitmap(bitmap, -90f)
-        return cropImage(bitmap)
+        return cropImage(bitmap, mtcnn)
     }
 
     override fun onDestroy() {

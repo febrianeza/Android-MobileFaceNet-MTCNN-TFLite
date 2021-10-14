@@ -10,7 +10,7 @@ import kotlin.math.min
 object Utils {
     fun copyBitmap(bitmap: Bitmap): Bitmap = bitmap.copy(bitmap.config, true)
 
-    fun drawRect(bitmap: Bitmap, rect: Rect, thick: Int) {
+    private fun drawRect(bitmap: Bitmap, rect: Rect, thick: Int) {
         try {
             val canvas = Canvas(bitmap)
             val r = 255
@@ -27,7 +27,7 @@ object Utils {
         }
     }
 
-    fun drawPoints(bitmap: Bitmap, landmark: Array<Point?>, thick: Int) {
+    private fun drawPoints(bitmap: Bitmap, landmark: Array<Point?>, thick: Int) {
         landmark.forEach {
             it?.let {
                 val x = it.x

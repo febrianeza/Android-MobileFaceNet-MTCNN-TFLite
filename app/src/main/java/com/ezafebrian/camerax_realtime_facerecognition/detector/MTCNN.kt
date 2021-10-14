@@ -3,7 +3,6 @@ package com.ezafebrian.camerax_realtime_facerecognition.detector
 import android.content.res.AssetManager
 import android.graphics.Bitmap
 import android.graphics.Point
-import android.util.Log
 import com.ezafebrian.camerax_realtime_facerecognition.util.*
 import com.ezafebrian.camerax_realtime_facerecognition.util.Constant.MODEL_FILE_ONET
 import com.ezafebrian.camerax_realtime_facerecognition.util.Constant.MODEL_FILE_PNET
@@ -38,11 +37,11 @@ class MTCNN(assetManager: AssetManager) {
         try {
             // pNet
             boxes = pNet(bitmap, minFaceSize)
-            square_limit(boxes, bitmap.width, bitmap.height)
+            squareLimit(boxes, bitmap.width, bitmap.height)
 
             //rNet
             boxes = rNet(bitmap, boxes)
-            square_limit(boxes, bitmap.width, bitmap.height)
+            squareLimit(boxes, bitmap.width, bitmap.height)
 
             //oNet
             boxes = oNet(bitmap, boxes)
@@ -78,13 +77,13 @@ class MTCNN(assetManager: AssetManager) {
     private fun oNetForward(oNetIn: Array<Array<Array<FloatArray>>>, boxes: Vector<Box>) {
         val num = oNetIn.size
         val prob1 = Array(num) { FloatArray(2) }
-        val conv6_2_conv6_2 = Array(num) { FloatArray(4) }
-        val conv6_3_conv6_3 = Array(num) { FloatArray(10) }
+        val conv62Conv62 = Array(num) { FloatArray(4) }
+        val conv63Conv63 = Array(num) { FloatArray(10) }
 
         val outputs: MutableMap<Int, Any> = HashMap()
         outputs[oInterpreter.getOutputIndex("onet/prob1")] = prob1
-        outputs[oInterpreter.getOutputIndex("onet/conv6-2/conv6-2")] = conv6_2_conv6_2
-        outputs[oInterpreter.getOutputIndex("onet/conv6-3/conv6-3")] = conv6_3_conv6_3
+        outputs[oInterpreter.getOutputIndex("onet/conv6-2/conv6-2")] = conv62Conv62
+        outputs[oInterpreter.getOutputIndex("onet/conv6-3/conv6-3")] = conv63Conv63
         oInterpreter.runForMultipleInputsOutputs(arrayOf<Any>(oNetIn), outputs)
 
         for (i in 0 until num) {
@@ -92,19 +91,19 @@ class MTCNN(assetManager: AssetManager) {
             boxes[i].score = prob1[i][1]
             // bias
             for (j in 0..3) {
-                boxes[i].bbr[j] = conv6_2_conv6_2[i][j]
+                boxes[i].bbr[j] = conv62Conv62[i][j]
             }
             // landmark
             for (j in 0..4) {
-                val x = (boxes[i].left() + conv6_3_conv6_3[i][j] * boxes[i].width()).roundToInt()
+                val x = (boxes[i].left() + conv63Conv63[i][j] * boxes[i].width()).roundToInt()
                 val y =
-                    (boxes[i].top() + conv6_3_conv6_3[i][j + 5] * boxes[i].height()).roundToInt()
+                    (boxes[i].top() + conv63Conv63[i][j + 5] * boxes[i].height()).roundToInt()
                 boxes[i].landmark[j] = Point(x, y)
             }
         }
     }
 
-    fun pNet(bitmap: Bitmap, minSize: Int): Vector<Box> {
+    private fun pNet(bitmap: Bitmap, minSize: Int): Vector<Box> {
         val whMin = min(bitmap.width, bitmap.height)
         var currentFaceSize = minSize.toFloat()
         val totalBoxes = Vector<Box>()
@@ -116,12 +115,12 @@ class MTCNN(assetManager: AssetManager) {
             val outW = (ceil(w * 0.5 - 5) + 0.5).toInt()
             val outH = (ceil(h * 0.5 - 5) + 0.5).toInt()
             var prob1 = Array(1) { Array(outW) { Array(outH) { FloatArray(2) } } }
-            var conv4_2_BiasAdd = Array(1) { Array(outW) { Array(outH) { FloatArray(4) } } }
-            pNetForward(bm, prob1, conv4_2_BiasAdd)
+            var conv42Biasadd = Array(1) { Array(outW) { Array(outH) { FloatArray(4) } } }
+            pNetForward(bm, prob1, conv42Biasadd)
             prob1 = transposeBatch(prob1)
-            conv4_2_BiasAdd = transposeBatch(conv4_2_BiasAdd)
+            conv42Biasadd = transposeBatch(conv42Biasadd)
             val curBoxes = Vector<Box>()
-            generateBoxes(prob1, conv4_2_BiasAdd, scale, curBoxes)
+            generateBoxes(prob1, conv42Biasadd, scale, curBoxes)
             nms(curBoxes, 0.5f, "Union")
             for (i in curBoxes.indices) if (!curBoxes[i].deleted) totalBoxes.addElement(curBoxes[i])
             currentFaceSize /= factor
@@ -139,7 +138,6 @@ class MTCNN(assetManager: AssetManager) {
             curCrop = transposeImage(curCrop)
             rNetIn[i] = curCrop
         }
-        Log.d("TAG", rNetIn.contentDeepToString())
         rNetForward(rNetIn, boxes)
 
         // RNetThreshold
@@ -156,22 +154,22 @@ class MTCNN(assetManager: AssetManager) {
     private fun rNetForward(rNetIn: Array<Array<Array<FloatArray>>>, boxes: Vector<Box>) {
         val num = rNetIn.size
         val prob1 = Array(num) { FloatArray(2) }
-        val conv5_2_conv5_2 = Array(num) { FloatArray(4) }
+        val conv52Conv52 = Array(num) { FloatArray(4) }
 
         val outputs: MutableMap<Int, Any> = HashMap()
         outputs[rInterpreter.getOutputIndex("rnet/prob1")] = prob1
-        outputs[rInterpreter.getOutputIndex("rnet/conv5-2/conv5-2")] = conv5_2_conv5_2
+        outputs[rInterpreter.getOutputIndex("rnet/conv5-2/conv5-2")] = conv52Conv52
         rInterpreter.runForMultipleInputsOutputs(arrayOf<Any>(rNetIn), outputs)
 
         for (i in 0 until num) {
             boxes[i].score = prob1[i][1]
             for (j in 0..3) {
-                boxes[i].bbr[j] = conv5_2_conv5_2[i][j]
+                boxes[i].bbr[j] = conv52Conv52[i][j]
             }
         }
     }
 
-    private fun square_limit(boxes: Vector<Box>, w: Int, h: Int) {
+    private fun squareLimit(boxes: Vector<Box>, w: Int, h: Int) {
          for (i in boxes.indices) {
             boxes[i].toSquareShape()
             boxes[i].limitSquare(w, h)
@@ -189,7 +187,7 @@ class MTCNN(assetManager: AssetManager) {
 
         for (y in 0 until h) {
             for (x in 0 until w) {
-                var score = prob1[0][y][x][1]
+                val score = prob1[0][y][x][1]
                 if (score > pNetThreshold) {
                     val box = Box()
                     box.score = score
@@ -239,7 +237,7 @@ class MTCNN(assetManager: AssetManager) {
         }
     }
 
-    fun updateBoxes(boxes: Vector<Box>): Vector<Box> {
+    private fun updateBoxes(boxes: Vector<Box>): Vector<Box> {
         val b = Vector<Box>()
         for (i in 0 until boxes.size) {
             if (!boxes[i].deleted) {

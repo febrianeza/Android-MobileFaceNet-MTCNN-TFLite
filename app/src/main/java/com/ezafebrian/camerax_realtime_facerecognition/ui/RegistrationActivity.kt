@@ -163,4 +163,9 @@ class RegistrationActivity : AppCompatActivity() {
         progressBar.visibility = View.INVISIBLE
         buttonCapture.isEnabled = true
     }
+
+    override fun onResume() {
+        super.onResume()
+        startCamera()
+    }
 }

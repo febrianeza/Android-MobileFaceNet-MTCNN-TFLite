@@ -4,9 +4,10 @@ import android.app.Activity
 import android.content.res.AssetManager
 import android.graphics.*
 import android.media.Image
-import android.media.Image.Plane
 import com.ezafebrian.camerax_realtime_facerecognition.R
+import com.ezafebrian.camerax_realtime_facerecognition.detector.Align
 import com.ezafebrian.camerax_realtime_facerecognition.detector.Box
+import com.ezafebrian.camerax_realtime_facerecognition.detector.MTCNN
 import java.io.ByteArrayOutputStream
 import java.io.File
 import java.io.FileInputStream
@@ -162,4 +163,17 @@ fun rotateBitmap(source: Bitmap, angle: Float): Bitmap {
     val matrix = Matrix()
     matrix.postRotate(angle)
     return Bitmap.createBitmap(source, 0, 0, source.width, source.height, matrix, true)
+}
+
+fun cropImage(bitmap: Bitmap, mtcnn: MTCNN): Bitmap {
+    var bitmapTemp = bitmap.copy(bitmap.config, false)
+    var boxes = mtcnn.detectFaces(bitmapTemp, bitmapTemp.width / 5)
+    var box = boxes[0]
+    bitmapTemp = Align.faceAlign(bitmapTemp, box.landmark)
+    boxes = mtcnn.detectFaces(bitmapTemp, bitmapTemp.width / 5)
+    box = boxes[0]
+    box.toSquareShape()
+    box.limitSquare(bitmapTemp.width, bitmapTemp.height)
+    val rect = box.transform2Rect()
+    return crop(bitmapTemp, rect)
 }
